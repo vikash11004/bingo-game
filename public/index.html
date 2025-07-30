@@ -63,24 +63,16 @@
                 <div id="gameStatus" class="text-center mb-4">
                     <div id="currentTurn" class="text-xl font-bold mb-2"></div>
                     <div id="gameMessage" class="text-gray-600"></div>
-                    <div class="text-sm text-gray-500 mt-2">Complete 5 lines (rows, columns, or diagonals) to win! Your opponent's grid is hidden.</div>
+                    <div class="text-sm text-gray-500 mt-2">Complete 5 lines (rows, columns, or diagonals) to win!</div>
                 </div>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                    <!-- Player 1 Grid -->
-                    <div>
-                        <h3 id="player1Name" class="text-base sm:text-lg font-bold text-center mb-2"></h3>
-                        <div id="player1Score" class="text-center mb-3 text-blue-600 font-semibold text-sm sm:text-base">Score: 0/5</div>
-                        <div id="player1Grid" class="grid grid-cols-5 gap-1 max-w-xs sm:max-w-sm mx-auto"></div>
-                        <div id="player1Note" class="text-center text-xs text-gray-500 mt-2"></div>
-                    </div>
-                    
-                    <!-- Player 2 Grid -->
-                    <div>
-                        <h3 id="player2Name" class="text-base sm:text-lg font-bold text-center mb-2"></h3>
-                        <div id="player2Score" class="text-center mb-3 text-blue-600 font-semibold text-sm sm:text-base">Score: 0/5</div>
-                        <div id="player2Grid" class="grid grid-cols-5 gap-1 max-w-xs sm:max-w-sm mx-auto"></div>
-                        <div id="player2Note" class="text-center text-xs text-gray-500 mt-2"></div>
+                <div class="flex justify-center mb-4 sm:mb-6">
+                    <!-- Current Player Grid Only -->
+                    <div class="w-full max-w-md">
+                        <h3 id="currentPlayerName" class="text-base sm:text-lg font-bold text-center mb-2"></h3>
+                        <div id="currentPlayerScore" class="text-center mb-3 text-blue-600 font-semibold text-sm sm:text-base">Score: 0/5</div>
+                        <div id="currentPlayerGrid" class="grid grid-cols-5 gap-1 max-w-xs sm:max-w-sm mx-auto"></div>
+                        <div id="currentPlayerNote" class="text-center text-xs text-gray-500 mt-2">Your Grid</div>
                     </div>
                 </div>
                        
