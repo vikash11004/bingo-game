@@ -142,18 +142,7 @@
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
 }
 
-/* Hidden opponent grid styling */
-.grid-cell.hidden-opponent {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-    color: #9ca3af;
-    cursor: not-allowed;
-    user-select: none;
-}
 
-.grid-cell.hidden-opponent:hover {
-    background-color: #f3f4f6;
-}
 
 /* Number animation when called */
 @keyframes number-called {

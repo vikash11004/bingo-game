@@ -7,6 +7,7 @@ class BingoGame {
         this.currentSetupNumber = 1;
         this.leaderboard = [];
         this.gameCounter = 0;
+        this.opponentName = null; // Track opponent name for leaderboard
         
         this.initializeEventListeners();
         this.initializeSocketListeners();
@@ -188,28 +189,19 @@ class BingoGame {
         this.hideAllScreens();
         document.getElementById('gameBoard').classList.remove('hidden');
         
-        // Set player names and scores
-        document.getElementById('player1Name').textContent = data.players[0].name;
-        document.getElementById('player2Name').textContent = data.players[1].name;
-        document.getElementById('player1Score').textContent = `Score: ${data.players[0].score}/5`;
-        document.getElementById('player2Score').textContent = `Score: ${data.players[1].score}/5`;
+        // Get current player data
+        const currentPlayer = data.players[this.playerIndex];
+        const opponentPlayer = data.players[1 - this.playerIndex];
         
-        // Show only current player's grid, hide opponent's grid
-        if (this.playerIndex === 0) {
-            // Player 1 - show their grid, hide Player 2's grid
-            this.createGameGrid('player1Grid', data.players[0].grid);
-            this.hideOpponentGrid('player2Grid');
-            document.getElementById('player1Name').textContent += ' (You)';
-            document.getElementById('player1Note').textContent = 'Your Grid';
-            document.getElementById('player2Note').textContent = 'Opponent\'s Grid (Hidden)';
-        } else {
-            // Player 2 - show their grid, hide Player 1's grid  
-            this.createGameGrid('player2Grid', data.players[1].grid);
-            this.hideOpponentGrid('player1Grid');
-            document.getElementById('player2Name').textContent += ' (You)';
-            document.getElementById('player2Note').textContent = 'Your Grid';
-            document.getElementById('player1Note').textContent = 'Opponent\'s Grid (Hidden)';
-        }
+        // Store opponent name for leaderboard (with safety check)
+        this.opponentName = opponentPlayer ? opponentPlayer.name : 'Opponent';
+        
+        // Set current player's name and score
+        document.getElementById('currentPlayerName').textContent = `${currentPlayer.name} (You)`;
+        document.getElementById('currentPlayerScore').textContent = `Score: ${currentPlayer.score}/5`;
+        
+        // Show only current player's grid
+        this.createGameGrid('currentPlayerGrid', currentPlayer.grid);
         
         // Create number pool
         this.createNumberPool(data.numberPool);
@@ -237,20 +229,7 @@ class BingoGame {
         }
     }
 
-    hideOpponentGrid(gridId) {
-        const gridDiv = document.getElementById(gridId);
-        gridDiv.innerHTML = '';
-        
-        // Create 25 hidden cells with question marks
-        for (let i = 0; i < 5; i++) {
-            for (let j = 0; j < 5; j++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell text-sm hidden-opponent';
-                cell.textContent = '?';
-                gridDiv.appendChild(cell);
-            }
-        }
-    }
+
     
     createNumberPool(numbers) {
         const poolDiv = document.getElementById('numberPool');
@@ -276,16 +255,14 @@ class BingoGame {
     }
     
     updateGameBoard(data) {
-        // Update scores for both players
-        document.getElementById('player1Score').textContent = `Score: ${data.players[0].score}/5`;
-        document.getElementById('player2Score').textContent = `Score: ${data.players[1].score}/5`;
+        // Get current player data
+        const currentPlayer = data.players[this.playerIndex];
         
-        // Update only current player's grid
-        if (this.playerIndex === 0) {
-            this.createGameGrid('player1Grid', data.players[0].grid);
-        } else {
-            this.createGameGrid('player2Grid', data.players[1].grid);
-        }
+        // Update current player's score
+        document.getElementById('currentPlayerScore').textContent = `Score: ${currentPlayer.score}/5`;
+        
+        // Update current player's grid
+        this.createGameGrid('currentPlayerGrid', currentPlayer.grid);
         
         // Update number pool
         this.createNumberPool(data.numberPool);
@@ -312,11 +289,18 @@ class BingoGame {
     }
     
     showWinner(winner) {
+        // Get current player name
+        const currentPlayerName = document.getElementById('currentPlayerName').textContent.replace(' (You)', '');
+        
+        // For leaderboard, we need both player names in correct order
+        const player1Name = this.playerIndex === 0 ? currentPlayerName : this.opponentName;
+        const player2Name = this.playerIndex === 0 ? this.opponentName : currentPlayerName;
+        
         // First update the leaderboard before showing winner modal
         this.addToLeaderboard({
             players: [
-                { name: document.getElementById('player1Name').textContent.replace(' (You)', '') },
-                { name: document.getElementById('player2Name').textContent.replace(' (You)', '') }
+                { name: player1Name },
+                { name: player2Name }
             ],
             winner: winner
         });
