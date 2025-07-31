@@ -308,7 +308,13 @@ body::before {
 /* Game Board Layout */
 .game-board-layout { display: flex; gap: 2rem; align-items: flex-start; }
 .game-status-panel { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 1.5rem; }
-.game-play-panel { flex: 2; display: flex; flex-direction: column; gap: 1.5rem; }
+.game-play-panel { 
+    flex: 2; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    align-items: center;
+}
 .game-status-card, .player-scores-card, .leaderboard-card {
     background: var(--bg-panel);
     border-radius: 12px;
@@ -331,26 +337,34 @@ body::before {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .player-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0.5rem;
-    max-width: 320px;
+    width: 320px;
     margin: 0 auto;
     justify-content: center;
-    width: 100%;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     -webkit-touch-callout: none;
+    place-content: center;
+    justify-items: center;
 }
 
 .player-grid-container.my-turn {
     border-color: var(--neon-green);
     animation: pulse-glow 2s infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 8. Grid & Number Pool Styles */
@@ -443,6 +457,7 @@ body::before {
     .game-board-layout { 
         flex-direction: column; 
         gap: 1.5rem;
+        align-items: center;
     }
     .game-status-panel { 
         min-width: 100%; 
@@ -451,6 +466,7 @@ body::before {
     .game-play-panel { 
         order: 1; 
         flex: none;
+        width: 100%;
     }
 }
 
@@ -480,6 +496,8 @@ body::before {
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        width: 100%;
+        max-width: none;
     }
     
     /* Grid sizing */
@@ -489,10 +507,11 @@ body::before {
         font-size: 1.25rem; 
     }
     .player-grid, .setup-grid {
-        max-width: 300px;
         gap: 0.4rem;
         margin: 0 auto;
         justify-items: center;
+        place-content: center;
+        width: 300px;
     }
     
     /* Leaderboard mobile optimization */
@@ -529,15 +548,18 @@ body::before {
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        width: 100%;
+        max-width: none;
     }
     
     /* Compact grid for small screens */
     .setup-grid, .player-grid { 
         gap: 0.25rem; 
-        max-width: 280px;
         margin: 0 auto;
         justify-items: center;
         place-items: center;
+        place-content: center;
+        width: 280px;
     }
     .grid-cell { 
         width: calc(16vw - 4px); 
@@ -611,11 +633,12 @@ body::before {
         min-height: 45px;
     }
     .setup-grid, .player-grid { 
-        max-width: 250px;
         gap: 0.2rem;
         margin: 0 auto;
         justify-items: center;
         place-items: center;
+        place-content: center;
+        width: 250px;
     }
     .game-status-card, .player-scores-card, .leaderboard-card,
     .player-grid-container {
@@ -624,6 +647,8 @@ body::before {
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        width: 100%;
+        max-width: none;
     }
     .panel-title { 
         font-size: 1.25rem; 
