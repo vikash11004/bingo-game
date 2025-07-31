@@ -143,7 +143,43 @@ class BingoGame {
     showWaitingRoom(gameCode) {
         this.hideAllScreens();
         document.getElementById('waitingRoom').classList.remove('hidden');
-        document.getElementById('gameCodeDisplay').textContent = gameCode;
+        const gameCodeDisplay = document.getElementById('gameCodeDisplay');
+        gameCodeDisplay.textContent = gameCode;
+        
+        // Add click functionality to copy to clipboard
+        gameCodeDisplay.style.cursor = 'pointer';
+        gameCodeDisplay.title = 'Click to copy to clipboard';
+        gameCodeDisplay.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(gameCode);
+                // Visual feedback
+                const originalText = gameCodeDisplay.textContent;
+                gameCodeDisplay.textContent = 'Copied!';
+                gameCodeDisplay.style.color = 'var(--neon-green)';
+                setTimeout(() => {
+                    gameCodeDisplay.textContent = originalText;
+                    gameCodeDisplay.style.color = '';
+                }, 1000);
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = gameCode;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Visual feedback
+                const originalText = gameCodeDisplay.textContent;
+                gameCodeDisplay.textContent = 'Copied!';
+                gameCodeDisplay.style.color = 'var(--neon-green)';
+                setTimeout(() => {
+                    gameCodeDisplay.textContent = originalText;
+                    gameCodeDisplay.style.color = '';
+                }, 1000);
+            }
+        };
+        
         document.getElementById('waitingMessage').textContent = 'Waiting for another player to join...';
         this.gameState = 'waiting';
     }
