@@ -1,257 +1,391 @@
-.grid-cell {
-    width: 3rem;
-    height: 3rem;
-    border: 2px solid #d1d5db;
-    border-radius: 0.375rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.125rem;
+/*
+ * Bingo Blast - Dark Theme Stylesheet
+ * -----------------------------------
+ * Sections:
+ * 1. Base & Root Variables
+ * 2. General Layout & Typography
+ * 3. Background & Effects
+ * 4. Animations (Keyframes)
+ * 5. Main Menu & Cards
+ * 6. Shared Game Panels & Components
+ * 7. Game Screens (Waiting, Setup, Board)
+ * 8. Grid & Number Pool Styles
+ * 9. Modal Styles (Winner)
+ * 10. Responsive Design
+*/
+
+/* 1. Base & Root Variables */
+:root {
+    --bg-dark: #111827;
+    --bg-panel: #1f2937;
+    --border-color: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --font-main: 'Quicksand', sans-serif;
+    
+    --neon-green: #34d399;
+    --neon-green-glow: rgba(52, 211, 153, 0.5);
+    --neon-blue: #60a5fa;
+    --neon-blue-glow: rgba(96, 165, 250, 0.4);
+    --neon-violet: #818cf8;
+    --neon-red: #f87171;
+
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. General Layout & Typography */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.screen {
+    display: block;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+}
+
+button {
+    font-family: var(--font-main);
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    border: none;
+    transition: all 0.3s ease;
     touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
 }
 
-.grid-cell:hover {
-    background-color: #f3f4f6;
+input {
+    font-family: var(--font-main);
 }
 
-.grid-cell.filled {
-    background-color: #dbeafe;
-    border-color: #93c5fd;
-    cursor: default;
-}
-
-.grid-cell.marked {
-    background-color: #fee2e2;
-    border-color: #fca5a5;
-    text-decoration: line-through;
-    color: #dc2626;
-}
-
-.number-pool-item {
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 2px solid #d1d5db;
-    border-radius: 0.375rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
-    background-color: white;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.number-pool-item:hover {
-    background-color: #dbeafe;
-    border-color: #60a5fa;
-}
-
-.number-pool-item.selected {
-    background-color: #d1d5db;
-    border-color: #9ca3af;
-    cursor: not-allowed;
-}
-
-.pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-/* Additional game-specific styles */
-.touch-manipulation {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.winning-line {
-    position: relative;
-}
-
-.winning-line::after {
+/* 3. Background & Effects */
+body::before {
     content: '';
-    position: absolute;
-    background-color: #22c55e;
-    z-index: 10;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 10% 10%, rgba(96, 165, 250, 0.1) 0%, transparent 30%),
+        radial-gradient(circle at 80% 90%, rgba(129, 140, 248, 0.1) 0%, transparent 30%);
+    z-index: -1;
+    pointer-events: none;
 }
 
-/* Horizontal winning line */
-.winning-line.horizontal::after {
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 4px;
-    transform: translateY(-50%);
+/* 4. Animations (Keyframes) */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Vertical winning line */
-.winning-line.vertical::after {
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 4px;
-    transform: translateX(-50%);
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 12px var(--neon-green-glow), inset 0 0 8px rgba(52, 211, 153, 0.2); }
+    50% { box-shadow: 0 0 24px var(--neon-green-glow), inset 0 0 12px rgba(52, 211, 153, 0.3); }
+    100% { box-shadow: 0 0 12px var(--neon-green-glow), inset 0 0 8px rgba(52, 211, 153, 0.2); }
 }
 
-/* Diagonal winning lines */
-.winning-line.diagonal-main::after {
-    top: 0;
-    left: 0;
-    width: 141.42%;
-    height: 4px;
-    transform: rotate(45deg);
-    transform-origin: 0 0;
+/* 5. Main Menu & Cards */
+.screen-header { text-align: center; margin-bottom: 3rem; }
+.main-title { font-size: 3.5rem; color: var(--text-primary); text-shadow: 0 0 15px var(--neon-blue-glow); }
+.main-subtitle { font-size: 1.25rem; color: var(--text-secondary); margin-top: 0.5rem; }
+.player-name-section { text-align: center; margin-bottom: 3rem; }
+.player-name-input {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.player-name-input:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue-glow);
+}
+.game-cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+.game-card {
+    background: rgba(31, 41, 55, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    transition: all 0.4s ease;
+    box-shadow: var(--shadow-sm);
+}
+.game-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    border-color: var(--neon-violet);
+}
+.card-icon { font-size: 3rem; margin-bottom: 1rem; }
+.card-title { font-size: 1.5rem; margin-bottom: 0.75rem; }
+.card-description { font-size: 1rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5; }
+.join-game-form { display: flex; flex-direction: column; gap: 1rem; }
+.game-code-input {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.875rem;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.game-code-input:focus { outline: none; border-color: var(--neon-green); }
+.card-button {
+    padding: 1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+.create-game-btn { background: var(--neon-blue); }
+.create-game-btn:hover { background: #3b82f6; box-shadow: 0 0 15px var(--neon-blue-glow); }
+.join-game-btn { background: var(--neon-green); }
+.join-game-btn:hover { background: #10b981; box-shadow: 0 0 15px var(--neon-green-glow); }
+
+/* 6. Shared Game Panels & Components */
+.game-panel {
+    background: var(--bg-panel);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 42rem;
+    width: 100%;
+    margin: 0 auto;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+.panel-title { text-align: center; font-size: 2rem; margin-bottom: 0.5rem; }
+.panel-subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 1.5rem; }
+.game-code-display {
+    font-family: monospace;
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    color: var(--neon-green);
+    margin-bottom: 1.5rem;
+    border: 1px dashed var(--neon-green);
+}
+.players-status { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+.player-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-dark);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+.waiting-message { text-align: center; color: var(--text-secondary); }
+
+/* 7. Game Screens (Waiting, Setup, Board) */
+/* Grid Setup */
+.setup-grid-container { 
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.setup-grid { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 0.5rem; 
+    max-width: 320px;
+    width: 100%;
+    margin: 0 auto;
+    justify-content: center;
+}
+.setup-footer { display: flex; justify-content: space-between; align-items: center; }
+.next-number { font-size: 1.125rem; font-weight: 600; color: var(--text-secondary); }
+.grid-setup-buttons { display: flex; gap: 0.75rem; }
+.random-fill-btn, .clear-grid-btn, .submit-grid-btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; color: white; }
+.random-fill-btn { background: var(--neon-violet); }
+.random-fill-btn:hover { background: #6d28d9; }
+.clear-grid-btn { background: var(--neon-red); }
+.clear-grid-btn:hover { background: #ef4444; }
+.submit-grid-btn { background: var(--neon-green); }
+.submit-grid-btn:hover { background: #10b981; }
+
+/* Game Board Layout */
+.game-board-layout { display: flex; gap: 2rem; align-items: flex-start; }
+.game-status-panel { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 1.5rem; }
+.game-play-panel { flex: 2; display: flex; flex-direction: column; gap: 1.5rem; }
+.game-status-card, .player-scores-card, .leaderboard-card {
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+.current-turn { font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem; }
+.game-message { color: var(--text-secondary); text-align: center; }
+.player-scores { display: flex; flex-direction: column; gap: 0.75rem; }
+.player-name { font-weight: 600; }
+.player-score { color: var(--text-secondary); font-size: 0.9rem; }
+.player-grid-container {
+    background: var(--bg-panel);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: box-shadow 0.5s ease;
+    text-align: center;
 }
 
-.winning-line.diagonal-anti::after {
-    top: 0;
-    right: 0;
-    width: 141.42%;
-    height: 4px;
-    transform: rotate(-45deg);
-    transform-origin: 100% 0;
+.player-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+    max-width: 320px;
+    margin: 0 auto;
+    justify-content: center;
 }
 
-/* Game status indicators */
-.current-player {
-    background-color: #fef3c7;
-    border-color: #f59e0b;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+.player-grid-container.my-turn {
+    border-color: var(--neon-green);
+    animation: pulse-glow 2s infinite;
 }
 
-.winner-grid {
-    background-color: #dcfce7;
-    border-color: #22c55e;
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
-}
-
-/* Hidden opponent grid styling */
-.grid-cell.hidden-opponent {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-    color: #9ca3af;
-    cursor: not-allowed;
+/* 8. Grid & Number Pool Styles */
+.grid-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border-radius: 8px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
     user-select: none;
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.5rem;
+    min-width: 4rem;
+    min-height: 4rem;
 }
+.grid-cell:hover:not(.marked):not(.filled) { background-color: #374151; }
+.grid-cell.filled { background: #374151; border-color: var(--neon-blue); color: var(--text-primary); cursor: default; }
+.grid-cell.marked { background: var(--neon-red); border-color: #fca5a5; text-decoration: line-through; color: white; }
+.grid-cell.clickable-cell { cursor: pointer; border-color: var(--neon-green); }
+.grid-cell.clickable-cell:hover { background: var(--neon-green); color: var(--bg-dark); transform: scale(1.05); }
 
-.grid-cell.hidden-opponent:hover {
-    background-color: #f3f4f6;
+/* Leaderboard */
+.leaderboard-title { text-align: center; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary); }
+.leaderboard-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.leaderboard-header th { padding: 0.5rem; text-align: center; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); }
+#leaderboardBody tr { border-bottom: 1px solid var(--border-color); }
+#leaderboardBody td { padding: 0.5rem; text-align: center; }
+#leaderboardBody tr:last-child { border-bottom: none; }
+#leaderboardBody .bg-green-50 { background-color: rgba(52, 211, 153, 0.1); }
+#leaderboardBody .text-green-600 { color: var(--neon-green); }
+
+/* 9. Modal Styles (Winner) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
 }
+.modal-overlay.hidden { display: none; }
+.modal-content {
+    background: var(--bg-panel);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 90%;
+    width: 450px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+.modal-inner { text-align: center; }
+.winner-emoji { font-size: 4rem; margin-bottom: 1rem; }
+.winner-title { font-size: 2rem; margin-bottom: 0.5rem; }
+.winner-text { font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 2rem; }
+.winner-buttons { display: flex; flex-direction: column; gap: 0.75rem; }
+.modal-btn { width: 100%; padding: 0.875rem; border-radius: 8px; font-weight: 700; font-size: 1rem; }
+.rematch-btn { background: var(--neon-green); color: var(--bg-dark); }
+.rematch-btn:hover { background: #34d399; box-shadow: 0 0 15px var(--neon-green-glow); }
+.new-game-btn { background: var(--neon-blue); color: var(--bg-dark); }
+.new-game-btn:hover { background: #60a5fa; box-shadow: 0 0 15px var(--neon-blue-glow); }
+.back-to-menu-btn { background: var(--border-color); color: var(--text-primary); }
+.back-to-menu-btn:hover { background: #4b5563; }
 
-/* Number animation when called */
-@keyframes number-called {
-    0% {
-        transform: scale(1);
-        background-color: white;
+/* 10. Responsive Design */
+@media (max-width: 1400px) {
+    .game-panel {
+        max-width: 38rem;
     }
-    50% {
-        transform: scale(1.2);
-        background-color: #fef3c7;
-    }
-    100% {
-        transform: scale(1);
-        background-color: #d1d5db;
+    .setup-grid-container {
+        max-width: 380px;
     }
 }
 
-.number-called {
-    animation: number-called 0.6s ease-in-out;
+@media (max-width: 1024px) {
+    .game-board-layout { flex-direction: column; }
 }
 
-/* Responsive improvements */
 @media (max-width: 768px) {
-    /* Make container take full width on mobile */
-    .container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-    
-    /* Adjust title size for mobile */
-    h1 {
-        font-size: 2.5rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-    
-    /* Smaller grid cells on mobile */
-    .grid-cell {
-        width: 2.5rem;
-        height: 2.5rem;
-        font-size: 1rem;
-    }
-    
-    /* Smaller number pool items */
-    .number-pool-item {
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.875rem;
-    }
-    
-    /* Adjust spacing for mobile */
-    .space-y-4 > * + * {
-        margin-top: 0.75rem;
-    }
-    
-    /* Better button sizes for touch */
-    button {
-        padding: 0.875rem 1.5rem !important;
-        font-size: 1rem !important;
-    }
-    
-    /* Input field improvements */
-    input[type="text"] {
-        padding: 0.875rem !important;
-        font-size: 1rem !important;
-    }
+    .main-title { font-size: 2.5rem; }
+    .game-cards-container { flex-direction: column; align-items: center; }
+    .grid-cell { width: 3rem; height: 3rem; font-size: 1.25rem; }
 }
 
 @media (max-width: 480px) {
-    /* Extra small screens */
-    h1 {
-        font-size: 2rem !important;
-    }
-    
-    /* Even smaller grid cells for very small screens */
-    .grid-cell {
-        width: 2rem;
-        height: 2rem;
-        font-size: 0.875rem;
-    }
-    
-    /* Smaller number pool for tiny screens */
-    .number-pool-item {
-        width: 1.75rem;
-        height: 1.75rem;
-        font-size: 0.75rem;
-    }
-    
-    /* Adjust modal width for small screens */
-    .max-w-md {
-        max-width: 90vw !important;
-    }
-    
-    /* Reduce padding on very small screens */
-    .p-6 {
-        padding: 1rem !important;
-    }
-    
-    .p-8 {
-        padding: 1.5rem !important;
-    }
+    .main-container { padding: 1rem 0.75rem; }
+    .main-title { font-size: 2rem; }
+    .main-subtitle { font-size: 1rem; }
+    .player-name-input { padding: 0.8rem 1rem; font-size: 1rem; }
+    .game-panel, .modal-content { padding: 1.5rem; }
+    .setup-grid { gap: 0.25rem; }
+    .grid-cell { width: calc(18vw - 6px); height: calc(18vw - 6px); font-size: 1rem; border-radius: 6px;}
+    .setup-footer { flex-direction: column; gap: 1rem; align-items: stretch; text-align: center; }
+    .grid-setup-buttons { justify-content: center; }
 }

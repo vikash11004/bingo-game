@@ -7,6 +7,9 @@ class BingoGame {
         this.currentSetupNumber = 1;
         this.leaderboard = [];
         this.gameCounter = 0;
+        this.playerWins = {}; // Track win counts for each player
+        this.playerGames = {}; // Track total games played for each player
+        this.gridSubmitted = false; // Track if current grid has been submitted
         
         this.initializeEventListeners();
         this.initializeSocketListeners();
@@ -36,6 +39,23 @@ class BingoGame {
         // Grid setup events
         document.getElementById('submitGridBtn').addEventListener('click', () => {
             this.socket.emit('submitGrid', this.setupGrid);
+            // Visual feedback that grid is submitted
+            const submitBtn = document.getElementById('submitGridBtn');
+            submitBtn.textContent = '✓ Grid Submitted';
+            submitBtn.style.backgroundColor = '#6b7280'; // Gray color
+            submitBtn.style.cursor = 'default';
+            submitBtn.disabled = true;
+            this.gridSubmitted = true; // Mark grid as submitted
+        });
+
+        // Random fill button
+        document.getElementById('randomFillBtn').addEventListener('click', () => {
+            this.randomFillGrid();
+        });
+
+        // Clear grid button
+        document.getElementById('clearGridBtn').addEventListener('click', () => {
+            this.clearGrid();
         });
 
         // Rematch button
@@ -43,22 +63,19 @@ class BingoGame {
             this.requestRematch();
         });
         
-        // New game button
+        // New game button (View Leaderboard)
         document.getElementById('newGameBtn').addEventListener('click', () => {
-            // Close winner modal and stay on game board to show leaderboard
-            document.getElementById('winnerModal').classList.add('hidden');
+            document.getElementById('winnerModal').classList.add('hidden'); // Use new class for modals
             
-            // Scroll to leaderboard and highlight it
-            const leaderboard = document.querySelector('.bg-white.rounded-lg.shadow-lg.p-6:last-child');
+            const leaderboard = document.querySelector('.leaderboard-card');
             if (leaderboard) {
-                leaderboard.scrollIntoView({ behavior: 'smooth' });
-                leaderboard.style.border = '3px solid #22c55e';
-                leaderboard.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
+                leaderboard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                leaderboard.style.boxShadow = '0 0 20px var(--neon-green-glow)';
+                leaderboard.style.borderColor = 'var(--neon-green)';
                 
-                // Remove highlight after 3 seconds
                 setTimeout(() => {
-                    leaderboard.style.border = '';
                     leaderboard.style.boxShadow = '';
+                    leaderboard.style.borderColor = '';
                 }, 3000);
             }
         });
@@ -76,6 +93,10 @@ class BingoGame {
         });
         
         this.socket.on('playerJoined', (data) => {
+            if (data.playerIndex !== undefined) {
+                this.playerIndex = data.playerIndex;
+            }
+            
             this.updatePlayersStatus(data.players);
             if (data.canStart) {
                 this.showGridSetup();
@@ -93,8 +114,7 @@ class BingoGame {
         this.socket.on('numberSelected', (data) => {
             this.updateGameBoard(data);
             if (data.winner) {
-                this.showWinner(data.winner);
-                // Don't call addToLeaderboard here since it's now called in showWinner
+                this.showWinner(data);
             }
         });
         
@@ -123,7 +143,7 @@ class BingoGame {
     showWaitingRoom(gameCode) {
         this.hideAllScreens();
         document.getElementById('waitingRoom').classList.remove('hidden');
-        document.getElementById('gameCodeDisplay').textContent = `Game Code: ${gameCode}`;
+        document.getElementById('gameCodeDisplay').textContent = gameCode;
         document.getElementById('waitingMessage').textContent = 'Waiting for another player to join...';
         this.gameState = 'waiting';
     }
@@ -134,11 +154,11 @@ class BingoGame {
         
         players.forEach((player, index) => {
             const playerDiv = document.createElement('div');
-            playerDiv.className = 'flex justify-between items-center p-3 bg-gray-50 rounded';
+            playerDiv.className = 'player-status-item';
             playerDiv.innerHTML = `
-                <span>Player ${index + 1}: ${player.name}</span>
-                <span class="${player.ready ? 'text-green-600' : 'text-yellow-600'}">
-                    ${player.ready ? '✓ Ready' : '⏳ Setting up grid'}
+                <span>${player.name} ${index === this.playerIndex ? '(You)' : ''}</span>
+                <span style="color: ${player.ready ? 'var(--neon-green)' : 'var(--neon-violet)'};">
+                    ${player.ready ? '✓ Ready' : '⏳ Setting up...'}
                 </span>
             `;
             statusDiv.appendChild(playerDiv);
@@ -148,8 +168,20 @@ class BingoGame {
     showGridSetup() {
         this.hideAllScreens();
         document.getElementById('gridSetup').classList.remove('hidden');
-        document.getElementById('waitingMessage').textContent = 'Both players joined! Set up your grid.';
+        document.getElementById('setupMessage').textContent = 'Both players joined! Set up your grid.';
+        this.gridSubmitted = false; // Reset submission flag for new grid setup
         this.createSetupGrid();
+        
+        const submitBtn = document.getElementById('submitGridBtn');
+        submitBtn.classList.add('hidden');
+        submitBtn.textContent = 'Confirm Grid';
+        submitBtn.style.backgroundColor = '';
+        submitBtn.style.cursor = '';
+        submitBtn.disabled = false;
+        document.getElementById('clearGridBtn').classList.add('hidden');
+        document.getElementById('randomFillBtn').style.display = 'inline-block';
+        document.getElementById('nextNumber').textContent = 'Next: 1';
+        
         this.gameState = 'setup';
     }
     
@@ -168,8 +200,7 @@ class BingoGame {
     }
     
     fillSetupCell(row, col, cellElement) {
-        if (this.setupGrid[row][col] !== null) return;
-        if (this.currentSetupNumber > 25) return;
+        if (this.setupGrid[row][col] !== null || this.currentSetupNumber > 25) return;
         
         this.setupGrid[row][col] = this.currentSetupNumber;
         cellElement.textContent = this.currentSetupNumber;
@@ -179,79 +210,127 @@ class BingoGame {
         document.getElementById('nextNumber').textContent = 
             this.currentSetupNumber <= 25 ? `Next: ${this.currentSetupNumber}` : 'Grid Complete!';
         
-        if (this.currentSetupNumber > 25) {
-            document.getElementById('submitGridBtn').classList.remove('hidden');
+        if (this.currentSetupNumber > 1) {
+            document.getElementById('clearGridBtn').classList.remove('hidden');
         }
+        
+        if (this.currentSetupNumber > 25) {
+            if (!this.gridSubmitted) {
+                const submitBtn = document.getElementById('submitGridBtn');
+                submitBtn.classList.remove('hidden');
+                submitBtn.textContent = 'Confirm Grid';
+                submitBtn.style.backgroundColor = '';
+                submitBtn.style.cursor = '';
+                submitBtn.disabled = false;
+            }
+            document.getElementById('randomFillBtn').style.display = 'none';
+        }
+    }
+    
+    randomFillGrid() {
+        const numbers = Array.from({length: 25}, (_, i) => i + 1);
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        
+        let index = 0;
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+                this.setupGrid[i][j] = numbers[index++];
+            }
+        }
+        
+        this.currentSetupNumber = 26;
+        this.createSetupGrid();
+        
+        const cells = document.getElementById('setupGrid').children;
+        let cellIndex = 0;
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+                cells[cellIndex].textContent = this.setupGrid[i][j];
+                cells[cellIndex].classList.add('filled');
+                cellIndex++;
+            }
+        }
+        
+        document.getElementById('nextNumber').textContent = 'Grid Complete!';
+        if (!this.gridSubmitted) {
+            const submitBtn = document.getElementById('submitGridBtn');
+            submitBtn.classList.remove('hidden');
+            submitBtn.textContent = 'Confirm Grid';
+            submitBtn.style.backgroundColor = '';
+            submitBtn.style.cursor = '';
+            submitBtn.disabled = false;
+        }
+        document.getElementById('clearGridBtn').classList.remove('hidden');
+        document.getElementById('randomFillBtn').style.display = 'none';
+    }
+    
+    clearGrid() {
+        this.setupGrid = Array(5).fill().map(() => Array(5).fill(null));
+        this.currentSetupNumber = 1;
+        this.gridSubmitted = false; // Reset submission flag
+        this.createSetupGrid();
+        
+        document.getElementById('nextNumber').textContent = 'Next: 1';
+        const submitBtn = document.getElementById('submitGridBtn');
+        submitBtn.classList.add('hidden');
+        submitBtn.textContent = 'Confirm Grid';
+        submitBtn.style.backgroundColor = '';
+        submitBtn.style.cursor = '';
+        submitBtn.disabled = false;
+        document.getElementById('clearGridBtn').classList.add('hidden');
+        document.getElementById('randomFillBtn').style.display = 'inline-block';
     }
     
     showGameBoard(data) {
         this.hideAllScreens();
         document.getElementById('gameBoard').classList.remove('hidden');
         
-        // Set player names and scores
         document.getElementById('player1Name').textContent = data.players[0].name;
         document.getElementById('player2Name').textContent = data.players[1].name;
         document.getElementById('player1Score').textContent = `Score: ${data.players[0].score}/5`;
         document.getElementById('player2Score').textContent = `Score: ${data.players[1].score}/5`;
         
-        // Show only current player's grid, hide opponent's grid
         if (this.playerIndex === 0) {
-            // Player 1 - show their grid, hide Player 2's grid
-            this.createGameGrid('player1Grid', data.players[0].grid);
-            this.hideOpponentGrid('player2Grid');
             document.getElementById('player1Name').textContent += ' (You)';
-            document.getElementById('player1Note').textContent = 'Your Grid';
-            document.getElementById('player2Note').textContent = 'Opponent\'s Grid (Hidden)';
         } else {
-            // Player 2 - show their grid, hide Player 1's grid  
-            this.createGameGrid('player2Grid', data.players[1].grid);
-            this.hideOpponentGrid('player1Grid');
             document.getElementById('player2Name').textContent += ' (You)';
-            document.getElementById('player2Note').textContent = 'Your Grid';
-            document.getElementById('player1Note').textContent = 'Opponent\'s Grid (Hidden)';
         }
         
-        // Create number pool
-        this.createNumberPool(data.numberPool);
-        
-        // Update turn indicator
+        const currentPlayerGrid = data.players[this.playerIndex].grid;
+        this.createGameGrid('playerGrid', currentPlayerGrid, data.currentPlayer, data.numberPool);
         this.updateTurnIndicator(data.currentPlayer, data.players);
         
         this.gameState = 'playing';
     }
     
-    createGameGrid(gridId, gridData) {
+    createGameGrid(gridId, gridData, currentPlayer, numberPool) {
         const gridDiv = document.getElementById(gridId);
         gridDiv.innerHTML = '';
         
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
                 const cell = document.createElement('div');
-                cell.className = 'grid-cell text-sm';
+                cell.className = 'grid-cell';
                 cell.textContent = gridData[i][j].value;
+                
                 if (gridData[i][j].marked) {
                     cell.classList.add('marked');
+                } else {
+                    const cellNumber = gridData[i][j].value;
+                    // Make cells clickable when it's the player's turn and the cell isn't already marked
+                    if (currentPlayer === this.playerIndex) {
+                        cell.classList.add('clickable-cell');
+                        cell.addEventListener('click', () => this.selectNumber(cellNumber));
+                    }
                 }
                 gridDiv.appendChild(cell);
             }
         }
     }
 
-    hideOpponentGrid(gridId) {
-        const gridDiv = document.getElementById(gridId);
-        gridDiv.innerHTML = '';
-        
-        // Create 25 hidden cells with question marks
-        for (let i = 0; i < 5; i++) {
-            for (let j = 0; j < 5; j++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell text-sm hidden-opponent';
-                cell.textContent = '?';
-                gridDiv.appendChild(cell);
-            }
-        }
-    }
-    
     createNumberPool(numbers) {
         const poolDiv = document.getElementById('numberPool');
         poolDiv.innerHTML = '';
@@ -262,11 +341,10 @@ class BingoGame {
             numberDiv.textContent = i;
             
             if (numbers.includes(i)) {
-                numberDiv.addEventListener('click', () => this.selectNumber(i));
-            } else {
                 numberDiv.classList.add('selected');
+            } else {
+                 numberDiv.addEventListener('click', () => this.selectNumber(i));
             }
-            
             poolDiv.appendChild(numberDiv);
         }
     }
@@ -276,21 +354,12 @@ class BingoGame {
     }
     
     updateGameBoard(data) {
-        // Update scores for both players
         document.getElementById('player1Score').textContent = `Score: ${data.players[0].score}/5`;
         document.getElementById('player2Score').textContent = `Score: ${data.players[1].score}/5`;
         
-        // Update only current player's grid
-        if (this.playerIndex === 0) {
-            this.createGameGrid('player1Grid', data.players[0].grid);
-        } else {
-            this.createGameGrid('player2Grid', data.players[1].grid);
-        }
+        const currentPlayerGrid = data.players[this.playerIndex].grid;
+        this.createGameGrid('playerGrid', currentPlayerGrid, data.currentPlayer, data.numberPool);
         
-        // Update number pool
-        this.createNumberPool(data.numberPool);
-        
-        // Update turn indicator
         if (!data.gameEnded) {
             this.updateTurnIndicator(data.currentPlayer, data.players);
         }
@@ -299,40 +368,53 @@ class BingoGame {
     updateTurnIndicator(currentPlayer, players) {
         const turnDiv = document.getElementById('currentTurn');
         const messageDiv = document.getElementById('gameMessage');
-        
+        const playerGridContainer = document.getElementById('playerGridContainer');
+
         if (currentPlayer === this.playerIndex) {
-            turnDiv.textContent = 'Your Turn';
-            turnDiv.className = 'text-xl font-bold mb-2 text-green-600 pulse';
-            messageDiv.textContent = 'Select a number from the pool below';
+            turnDiv.textContent = 'Your Turn!';
+            turnDiv.style.color = 'var(--neon-green)';
+            messageDiv.textContent = 'Select a number from the pool to mark it.';
+            playerGridContainer.classList.add('my-turn'); // ✨ ADD GLOW
         } else {
-            turnDiv.textContent = `${players[currentPlayer].name}'s Turn`;
-            turnDiv.className = 'text-xl font-bold mb-2 text-blue-600';
-            messageDiv.textContent = 'Waiting for opponent to select a number...';
+            turnDiv.textContent = `Waiting for ${players[currentPlayer].name}...`;
+            turnDiv.style.color = 'var(--text-primary)';
+            messageDiv.textContent = 'Opponent is choosing a number.';
+            playerGridContainer.classList.remove('my-turn'); // ✨ REMOVE GLOW
         }
     }
     
-    showWinner(winner) {
-        // First update the leaderboard before showing winner modal
+    showWinner(data) {
         this.addToLeaderboard({
             players: [
-                { name: document.getElementById('player1Name').textContent.replace(' (You)', '') },
-                { name: document.getElementById('player2Name').textContent.replace(' (You)', '') }
+                { name: document.getElementById('player1Name').textContent.replace(' (You)', ''), score: data.players[0].score },
+                { name: document.getElementById('player2Name').textContent.replace(' (You)', ''), score: data.players[1].score }
             ],
-            winner: winner
+            winner: data.winner
         });
         
         document.getElementById('winnerModal').classList.remove('hidden');
-        document.getElementById('winnerText').textContent = `${winner.name} wins with ${winner.score} completed lines!`;
+        document.getElementById('winnerText').textContent = `${data.winner.name} wins with ${data.winner.score} completed lines!`;
+        document.getElementById('playerGridContainer').classList.remove('my-turn');
     }
     
     addToLeaderboard(data) {
         this.gameCounter++;
-        this.leaderboard.push({
-            gameNumber: this.gameCounter,
-            player1: data.players[0].name,
-            player2: data.players[1].name,
-            winner: data.winner.name
-        });
+        
+        // Update win counts and games played
+        const player1Name = data.players[0].name;
+        const player2Name = data.players[1].name;
+        const winnerName = data.winner.name;
+        
+        // Initialize player stats if they don't exist
+        if (!this.playerWins[player1Name]) this.playerWins[player1Name] = 0;
+        if (!this.playerWins[player2Name]) this.playerWins[player2Name] = 0;
+        if (!this.playerGames[player1Name]) this.playerGames[player1Name] = 0;
+        if (!this.playerGames[player2Name]) this.playerGames[player2Name] = 0;
+        
+        // Increment winner's count and games played for both
+        this.playerWins[winnerName]++;
+        this.playerGames[player1Name]++;
+        this.playerGames[player2Name]++;
         
         this.updateLeaderboardDisplay();
     }
@@ -341,102 +423,84 @@ class BingoGame {
         const tbody = document.getElementById('leaderboardBody');
         const noGamesDiv = document.getElementById('noGames');
         
-        if (this.leaderboard.length === 0) {
-            noGamesDiv.classList.remove('hidden');
+        if (Object.keys(this.playerWins).length === 0) {
+            noGamesDiv.style.display = 'block';
             tbody.innerHTML = '';
             return;
         }
         
-        noGamesDiv.classList.add('hidden');
+        noGamesDiv.style.display = 'none';
         tbody.innerHTML = '';
         
-        // Show games in reverse order (most recent first)
-        this.leaderboard.slice().reverse().forEach(game => {
+        // Get all unique players and sort by wins (descending)
+        const players = Object.keys(this.playerWins).sort((a, b) => this.playerWins[b] - this.playerWins[a]);
+        
+        players.forEach(playerName => {
             const row = document.createElement('tr');
-            row.className = 'border-b hover:bg-gray-50';
-            
-            // Highlight the most recent game
-            if (game.gameNumber === this.gameCounter) {
-                row.className += ' bg-green-50 border-green-200';
-            }
+            const wins = this.playerWins[playerName];
+            const gamesPlayed = this.playerGames[playerName];
             
             row.innerHTML = `
-                <td class="p-2">${game.gameNumber}</td>
-                <td class="p-2">${game.player1}</td>
-                <td class="p-2">${game.player2}</td>
-                <td class="p-2 font-semibold text-green-600">${game.winner}</td>
+                <td style="color: var(--text-primary); font-weight: 600;">${playerName}</td>
+                <td style="color: var(--neon-green); font-weight: 600;">${wins}</td>
+                <td style="color: var(--text-secondary);">${gamesPlayed}</td>
             `;
             tbody.appendChild(row);
         });
     }
     
     hideAllScreens() {
-        document.getElementById('mainMenu').classList.add('hidden');
-        document.getElementById('waitingRoom').classList.add('hidden');
-        document.getElementById('gridSetup').classList.add('hidden');
-        document.getElementById('gameBoard').classList.add('hidden');
-        document.getElementById('winnerModal').classList.add('hidden');
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
     }
     
     resetToMenu() {
         this.hideAllScreens();
         document.getElementById('mainMenu').classList.remove('hidden');
-        
-        // Reset form fields
         document.getElementById('playerName').value = '';
         document.getElementById('gameCode').value = '';
         
-        // Reset game state
         this.gameState = 'menu';
         this.playerIndex = null;
-        this.setupGrid = Array(5).fill().map(() => Array(5).fill(null));
-        this.currentSetupNumber = 1;
-        document.getElementById('nextNumber').textContent = 'Next: 1';
-        document.getElementById('submitGridBtn').classList.add('hidden');
+        this.clearGrid();
     }
 
     requestRematch() {
-        // Hide winner modal and show rematch request
         document.getElementById('winnerModal').classList.add('hidden');
         this.showRematchRequest();
         this.socket.emit('requestRematch');
     }
 
     handleRematchRequest(data) {
-        // Show rematch request modal for the other player
         this.showRematchRequest(data.requestingPlayer);
     }
 
     showRematchRequest(requestingPlayer = null) {
+        this.removeRematchModal(); // Ensure no duplicates
         const modal = document.createElement('div');
         modal.id = 'rematchModal';
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.className = 'modal-overlay';
         
         const message = requestingPlayer 
             ? `${requestingPlayer.name} wants a rematch!`
-            : 'Waiting for opponent to accept rematch...';
+            : 'Rematch request sent. Waiting for opponent...';
             
         const buttons = requestingPlayer 
-            ? `<div class="space-y-3">
-                 <button id="acceptRematchBtn" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold">
-                     Accept Rematch
-                 </button>
-                 <button id="declineRematchBtn" class="w-full bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 font-semibold">
-                     Decline
-                 </button>
+            ? `<div class="winner-buttons">
+                 <button id="acceptRematchBtn" class="modal-btn rematch-btn">Accept</button>
+                 <button id="declineRematchBtn" class="modal-btn back-to-menu-btn">Decline</button>
                </div>`
-            : `<div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>`;
+            : `<div style="height: 100px;"></div>`; // Placeholder for spinner
         
         modal.innerHTML = `
-            <div class="bg-white rounded-lg p-8 max-w-md mx-4">
-                <div class="text-center">
-                    <div class="text-4xl mb-4">🔄</div>
-                    <h2 class="text-2xl font-bold mb-4">Rematch Request</h2>
-                    <p class="text-lg text-gray-700 mb-6">${message}</p>
+            <div class="modal-content">
+                <div class="modal-inner">
+                    <div class="winner-emoji">🔄</div>
+                    <h2 class="winner-title">Rematch?</h2>
+                    <p class="winner-text">${message}</p>
                     ${buttons}
                 </div>
-            </div>
-        `;
+            </div>`;
         
         document.body.appendChild(modal);
         
@@ -445,7 +509,6 @@ class BingoGame {
                 this.socket.emit('acceptRematch');
                 this.removeRematchModal();
             });
-            
             document.getElementById('declineRematchBtn').addEventListener('click', () => {
                 this.socket.emit('declineRematch');
                 this.removeRematchModal();
@@ -455,31 +518,22 @@ class BingoGame {
 
     removeRematchModal() {
         const modal = document.getElementById('rematchModal');
-        if (modal) {
-            modal.remove();
-        }
+        if (modal) modal.remove();
     }
 
     startRematch() {
         this.removeRematchModal();
-        
-        // Reset grid setup state
         this.setupGrid = Array(5).fill().map(() => Array(5).fill(null));
         this.currentSetupNumber = 1;
-        
-        // Show grid setup screen
         this.showGridSetup();
-        
-        // Update message for rematch
-        document.getElementById('waitingMessage').textContent = 'Rematch! Set up your new grid.';
-        
-        // Reset the UI elements
+        document.getElementById('setupMessage').textContent = 'Rematch! Set up your new grid.';
         document.getElementById('nextNumber').textContent = 'Next: 1';
         document.getElementById('submitGridBtn').classList.add('hidden');
+        document.getElementById('clearGridBtn').classList.add('hidden');
+        document.getElementById('randomFillBtn').style.display = 'inline-block';
     }
 }
 
-// Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     new BingoGame();
 });

@@ -206,7 +206,7 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (!game.isReady()) {
+        if (game.players.length < 2) {
             const player = {
                 id: socket.id,
                 name: playerName,
@@ -219,15 +219,23 @@ io.on('connection', (socket) => {
             playerSockets.set(socket.id, { gameCode, playerIndex: 1 });
 
             socket.join(gameCode);
-            io.to(gameCode).emit('playerJoined', {
+            
+            // Send playerIndex to the joining player
+            socket.emit('playerJoined', {
+                players: game.players,
+                canStart: game.isReady(),
+                playerIndex: 1
+            });
+            
+            // Send update to all other players in the room
+            socket.to(gameCode).emit('playerJoined', {
                 players: game.players,
                 canStart: game.isReady()
             });
 
             console.log(`Player ${playerName} joined game ${gameCode}`);
-        } else {
-            socket.emit('error', 'Game is full');
         }
+        // Removed the "Game is full" error message - silently ignore join attempts for full games
     });
 
     socket.on('submitGrid', (gridData) => {

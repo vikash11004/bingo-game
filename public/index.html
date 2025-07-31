@@ -3,137 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Bingo Blast 🚀</title>
+    <link rel="icon" type="image/icon" href="assets/favicon.ico">
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-        <h1 class="text-2xl sm:text-4xl font-bold text-center mb-4 sm:mb-8 text-blue-600">🎯 Bingo Game</h1>
-        
-        <!-- Main Menu -->
-        <div id="mainMenu" class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-4 sm:p-6 mx-2 sm:mx-auto">
-            <div class="space-y-3 sm:space-y-4">
-                <input type="text" id="playerName" placeholder="Enter your name" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base">
-                
-                <button id="createGameBtn" 
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold text-base touch-manipulation">
-                    Create Game
-                </button>
-                
-                <div class="text-center text-gray-500">or</div>
-                
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <input type="text" id="gameCode" placeholder="Game Code" 
-                           class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
-                    <button id="joinGameBtn" 
-                            class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-semibold text-base touch-manipulation">
-                        Join
-                    </button>
-                </div>
-            </div>
-        </div>
+<body>
 
-        <!-- Waiting Room -->
-        <div id="waitingRoom" class="hidden max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Game Room</h2>
-            <div id="gameCodeDisplay" class="text-center text-xl font-mono bg-gray-100 p-3 rounded mb-4"></div>
-            <div id="playersStatus" class="space-y-2 mb-4"></div>
-            <div id="waitingMessage" class="text-center text-gray-600"></div>
-        </div>
+    <main class="main-container">
 
-        <!-- Grid Setup -->
-        <div id="gridSetup" class="hidden max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold text-center mb-4">Setup Your Grid</h2>
-            <p class="text-center text-gray-600 mb-4">Click cells in order to place numbers 1-25</p>
-            <div id="setupGrid" class="grid grid-cols-5 gap-1 sm:gap-2 max-w-xs sm:max-w-md mx-auto mb-4"></div>
-            <div class="text-center">
-                <span id="nextNumber" class="text-lg sm:text-xl font-bold">Next: 1</span>
-                <button id="submitGridBtn" class="hidden ml-2 sm:ml-4 bg-blue-500 text-white px-4 sm:px-6 py-2 rounded hover:bg-blue-600 text-sm sm:text-base touch-manipulation">
-                    Submit Grid
-                </button>
-            </div>
-        </div>
-
-        <!-- Game Board -->
-        <div id="gameBoard" class="hidden max-w-6xl mx-auto">
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <div id="gameStatus" class="text-center mb-4">
-                    <div id="currentTurn" class="text-xl font-bold mb-2"></div>
-                    <div id="gameMessage" class="text-gray-600"></div>
-                    <div class="text-sm text-gray-500 mt-2">Complete 5 lines (rows, columns, or diagonals) to win! Your opponent's grid is hidden.</div>
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                    <!-- Player 1 Grid -->
-                    <div>
-                        <h3 id="player1Name" class="text-base sm:text-lg font-bold text-center mb-2"></h3>
-                        <div id="player1Score" class="text-center mb-3 text-blue-600 font-semibold text-sm sm:text-base">Score: 0/5</div>
-                        <div id="player1Grid" class="grid grid-cols-5 gap-1 max-w-xs sm:max-w-sm mx-auto"></div>
-                        <div id="player1Note" class="text-center text-xs text-gray-500 mt-2"></div>
-                    </div>
-                    
-                    <!-- Player 2 Grid -->
-                    <div>
-                        <h3 id="player2Name" class="text-base sm:text-lg font-bold text-center mb-2"></h3>
-                        <div id="player2Score" class="text-center mb-3 text-blue-600 font-semibold text-sm sm:text-base">Score: 0/5</div>
-                        <div id="player2Grid" class="grid grid-cols-5 gap-1 max-w-xs sm:max-w-sm mx-auto"></div>
-                        <div id="player2Note" class="text-center text-xs text-gray-500 mt-2"></div>
-                    </div>
-                </div>
-                       
-                
-                <!-- Number Pool -->
-                <div>
-                    <h3 class="text-base sm:text-lg font-bold text-center mb-3">Number Pool</h3>
-                    <div id="numberPool" class="flex flex-wrap justify-center gap-1 sm:gap-2 max-w-sm sm:max-w-2xl mx-auto px-2"></div>
-                </div>
+        <section id="mainMenu" class="screen">
+            <header class="screen-header">
+                <h1 class="main-title">🚀Bingo Blast🚀</h1>
+                <p class="main-subtitle">Create or join a game to start the fun</p>
+            </header>
+            
+            <div class="player-name-section">
+                <input type="text" id="playerName" placeholder="Enter your name" class="player-name-input">
             </div>
             
-            <!-- Leaderboard -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-xl font-bold text-center mb-4">🏆 Leaderboard (Session)</h3>
-                <div id="leaderboard" class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="text-left p-2">Game #</th>
-                                <th class="text-left p-2">Player 1</th>
-                                <th class="text-left p-2">Player 2</th>
-                                <th class="text-left p-2">Winner</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardBody"></tbody>
-                    </table>
+            <div class="game-cards-container">
+                <div class="game-card">
+                    <div class="card-icon">🎮</div>
+                    <h3 class="card-title">Create a New Game</h3>
+                    <p class="card-description">Start a new game and get a code to share with a friend.</p>
+                    <button id="createGameBtn" class="card-button create-game-btn">Create Game</button>
                 </div>
-                <div id="noGames" class="text-center text-gray-500 py-4">No games completed yet</div>
+                
+                <div class="game-card">
+                    <div class="card-icon">🔗</div>
+                    <h3 class="card-title">Join an Existing Game</h3>
+                    <p class="card-description">Have a code? Enter it below to join your friend's game.</p>
+                    <form class="join-game-form" onsubmit="event.preventDefault(); document.getElementById('joinGameBtn').click();">
+                        <input type="text" id="gameCode" placeholder="Enter Game Code" class="game-code-input">
+                        <button id="joinGameBtn" class="card-button join-game-btn">Join Game</button>
+                    </form>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Winner Modal -->
-        <div id="winnerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-8 max-w-md mx-4">
-                <div class="text-center">
-                    <div class="text-6xl mb-4">🎉</div>
-                    <h2 class="text-2xl font-bold mb-2">Congratulations!</h2>
-                    <p id="winnerText" class="text-xl text-gray-700 mb-6"></p>
-                    <div class="space-y-3">
-                        <button id="rematchBtn" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 font-semibold">
-                            🔄 Rematch
-                        </button>
-                        <button id="newGameBtn" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-semibold">
-                            View Leaderboard
-                        </button>
-                        <button id="backToMenuBtn" class="w-full bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 font-semibold">
-                            Back to Main Menu
-                        </button>
+        <section id="waitingRoom" class="screen hidden">
+            <div class="game-panel">
+                <h2 class="panel-title">Game Room</h2>
+                <p class="panel-subtitle">Share the code with a friend to begin!</p>
+                <div id="gameCodeDisplay" class="game-code-display"></div>
+                <div id="playersStatus" class="players-status"></div>
+                <div id="waitingMessage" class="waiting-message"></div>
+            </div>
+        </section>
+
+        <section id="gridSetup" class="screen hidden">
+            <div class="game-panel">
+                <h2 class="panel-title">Setup Your Grid</h2>
+                <p id="setupMessage" class="panel-subtitle">Click cells to place numbers 1-25, or let us do it for you!</p>
+                <div class="setup-grid-container">
+                    <div id="setupGrid" class="setup-grid"></div>
+                </div>
+                <div class="setup-footer">
+                    <span id="nextNumber" class="next-number">Next: 1</span>
+                    <div class="grid-setup-buttons">
+                        <button id="randomFillBtn" class="random-fill-btn">🎲 Random Fill</button>
+                        <button id="clearGridBtn" class="hidden clear-grid-btn">Clear</button>
+                        <button id="submitGridBtn" class="hidden submit-grid-btn">Confirm Grid</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gameBoard" class="screen hidden">
+            <div class="game-board-layout">
+                <div class="game-status-panel">
+                    <div id="gameStatus" class="game-status-card">
+                        <div id="currentTurn" class="current-turn"></div>
+                        <div id="gameMessage" class="game-message"></div>
+                    </div>
+                    <div class="player-scores-card">
+                        <h3 class="panel-subtitle">Scores</h3>
+                        <div class="player-scores">
+                            <div class="player-score-item">
+                                <h4 id="player1Name" class="player-name">Player 1</h4>
+                                <div id="player1Score" class="player-score">Score: 0/5</div>
+                            </div>
+                            <div class="player-score-item">
+                                <h4 id="player2Name" class="player-name">Player 2</h4>
+                                <div id="player2Score" class="player-score">Score: 0/5</div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="leaderboard-card">
+                        <h3 class="leaderboard-title">🏆 Match History</h3>
+                        <div id="leaderboard" class="leaderboard-table-container">
+                            <table class="leaderboard-table">
+                                <thead>
+                                    <tr class="leaderboard-header">
+                                        <th>Player</th><th>Wins</th><th>No of Games Played</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="noGames" class="no-games">No games completed yet.</div>
+                    </div>
+                </div>
+                <div class="game-play-panel">
+                    <div id="playerGridContainer" class="player-grid-container">
+                        <h3 class="panel-subtitle">Your Grid</h3>
+                        <div id="playerGrid" class="player-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="winnerModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-inner">
+                    <div class="winner-emoji">🎉</div>
+                    <h2 class="winner-title">Game Over!</h2>
+                    <p id="winnerText" class="winner-text"></p>
+                    <div class="winner-buttons">
+                        <button id="rematchBtn" class="modal-btn rematch-btn">🔄 Rematch</button>
+                        <button id="newGameBtn" class="modal-btn new-game-btn">View History</button>
+                        <button id="backToMenuBtn" class="modal-btn back-to-menu-btn">Back to Menu</button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="script.js"></script>
 </body>
